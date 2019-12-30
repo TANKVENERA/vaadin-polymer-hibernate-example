@@ -13,12 +13,8 @@ import java.util.List;
 /**
  * Model for the template.
  */
-public interface HelloWorldModel extends TemplateModel {
+public interface CarModel extends TemplateModel {
 
-//     void setItems(List<String> items);
-//     List<String> getItems();
-     void setCar(Car car);
      List<Car> getItems();
-
 
 }

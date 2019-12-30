@@ -27,7 +27,7 @@ import '@polymer/iron-scroll-threshold/iron-scroll-threshold.js';
             }
          </style>
          <iron-scroll-threshold id="scrollTheshold" on-lower-threshold="_load" scroll-target="document">
-            <iron-swipeable-container  on-iron-swipe="handleSwipe" scroll-target="document">
+            <iron-swipeable-container disable-swipe on-iron-swipe="handleSwipe" scroll-target="document">
                 <template id="list" is="dom-repeat" items="{{items}}">
                     <div  class="block">
                         <paper-card>
@@ -49,10 +49,7 @@ import '@polymer/iron-scroll-threshold/iron-scroll-threshold.js';
 
       _load (e) {
          var carAmount = this.$server.getCarAmount;
-         console.log('FFFFF', carAmount);
-         var size = this.$.list.items.length == 0 ? 0 : this.$.list.items.length
-
-         this.$server.loadMoreData(size);
+         this.$server.loadMoreData(e.target.getElementsByClassName('block').length);
          setTimeout(() => {
              this.$.scrollTheshold.clearTriggers();
          }, 500);
@@ -61,8 +58,11 @@ import '@polymer/iron-scroll-threshold/iron-scroll-threshold.js';
      handleSwipe(e) {
          var i = this.$.list.indexForElement(e.detail.target)
          var index = this.$.list.items[i].id;
-         console.log('FFFFFF', this.$.list.items[i]);
          this.$server.deleteItem(index);
+         if (e.target.getElementsByClassName('block').length < 5) {
+            this._load(e)
+         }
+         console.log("After deletion", e.target.getElementsByClassName('block').length)
      }
 
    }

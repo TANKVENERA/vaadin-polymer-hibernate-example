@@ -23,42 +23,47 @@ import java.util.List;
 @NpmPackage(value = "@polymer/paper-card", version = "3.0.1")
 @NpmPackage(value = "@polymer/iron-scroll-threshold", version = "3.0.1")
 @JsModule("./src/hello-world.js")
-public class HelloWorld extends PolymerTemplate<HelloWorldModel> {
+public class LazyPaperCardList extends PolymerTemplate<CarModel> {
 
     private SessionFactory sessionFactory = HibernateUtil.buildSessionFactory();
 
-    public HelloWorld() {
+    public LazyPaperCardList() {
         setId("template");
     }
 
     @ClientCallable
     public void loadMoreData (Integer size) {
-        System.out.println("DDDD "  + size);
-        Session session = sessionFactory.openSession();
-        Query query = session.createQuery("From Car");
-        query.setFirstResult(size);
-        query.setMaxResults(5);
-        session.beginTransaction();
-        List<Car> cars = query.getResultList();
-        session.getTransaction().commit();
-        getModel().getItems().addAll(cars);
+        if (Long.valueOf(size) !=  getCarAmount()) {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            Query query = session.createQuery("From Car");
+            query.setFirstResult(size);
+            query.setMaxResults(5);
+            List<Car> cars = query.getResultList();
+            session.getTransaction().commit();
+            getModel().getItems().addAll(cars);
+        }
     }
 
     @ClientCallable
-    public void deleteItem (Integer item) {
+    public void deleteItem (Integer id) {
         Session session = sessionFactory.openSession();
         session.beginTransaction();
-        Car carToDelete =  session.get(Car.class, item);
+        Car carToDelete =  session.get(Car.class, id);
         session.delete(carToDelete);
         session.getTransaction().commit();
     }
 
-    public void getCarAmount() {
+    public Long getCarAmount() {
         Session session = sessionFactory.openSession();
         session.beginTransaction();
         Query query = session.createQuery("select count(c) from Car c");
-        Long number =  (Long)query.getSingleResult();
+        Long number =  (Long) query.getSingleResult();
         session.getTransaction().commit();
-        System.out.println("DDDDD " + number);
+        return  number;
+    }
+
+    public List<Car> getCars () {
+        return getModel().getItems();
     }
 }

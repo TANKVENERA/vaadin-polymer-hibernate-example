@@ -6,7 +6,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLayout;
-import ru.mail.view.HelloWorld;
+import ru.mail.view.LazyPaperCardList;
 
 
 
@@ -22,7 +22,7 @@ import ru.mail.view.HelloWorld;
 public class MainView extends VerticalLayout implements RouterLayout {
 
     public MainView() {
-        add(new HelloWorld());
+        add(new LazyPaperCardList());
         }
 
 }
