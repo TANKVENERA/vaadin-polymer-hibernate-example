@@ -1,12 +1,12 @@
 package ru.mail.view;
 
-import com.vaadin.flow.component.ClientCallable;
-import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.dependency.JsModule;
-import com.vaadin.flow.component.dependency.NpmPackage;
-import com.vaadin.flow.component.polymertemplate.PolymerTemplate;
+import com.vaadin.flow.component.polymertemplate.*;
+import com.vaadin.flow.shared.Registration;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import ru.mail.listener.IronSwipeEvent;
 import ru.mail.model.Car;
 import ru.mail.util.HibernateUtil;
 
@@ -19,49 +19,47 @@ import java.util.List;
  */
 
 @Tag("hello-world")
-@NpmPackage(value = "@polymer/iron-swipeable-container", version = "3.0.1")
-@NpmPackage(value = "@polymer/paper-card", version = "3.0.1")
-@NpmPackage(value = "@polymer/iron-scroll-threshold", version = "3.0.1")
 @JsModule("./src/hello-world.js")
-public class LazyPaperCardList extends PolymerTemplate<CarModel> {
+public class LazyPaperCardList extends PolymerTemplate<CarModel>{
 
     private SessionFactory sessionFactory = HibernateUtil.buildSessionFactory();
+    private static Integer actualCount;
+
+    @EventHandler
+    private void handleSwipe(@ModelItem Car car) {
+        System.out.println("Received a message: " + car.getId());
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        Car carToDelete =  session.get(Car.class, car.getId());
+        session.delete(carToDelete);
+        session.getTransaction().commit();
+        actualCount--;
+    }
+
+    @EventHandler
+    private void loadData() {
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        Query query = session.createQuery("From Car");
+        query.setFirstResult(actualCount);
+        query.setMaxResults(5);
+        List<Car> cars = query.getResultList();
+        System.out.println("!!!!! - triggered " + actualCount + " : " + cars.size());
+        session.getTransaction().commit();
+        getModel().getItems().addAll(cars);
+        actualCount = actualCount + cars.size();
+    }
+
+
+   public Registration addIronSwipeListener(ComponentEventListener<IronSwipeEvent> listener) {
+       return addListener(IronSwipeEvent.class, listener);
+   }
 
     public LazyPaperCardList() {
+        actualCount = 0;
         setId("template");
     }
 
-    @ClientCallable
-    public void loadMoreData (Integer size) {
-        if (Long.valueOf(size) !=  getCarAmount()) {
-            Session session = sessionFactory.openSession();
-            session.beginTransaction();
-            Query query = session.createQuery("From Car");
-            query.setFirstResult(size);
-            query.setMaxResults(5);
-            List<Car> cars = query.getResultList();
-            session.getTransaction().commit();
-            getModel().getItems().addAll(cars);
-        }
-    }
-
-    @ClientCallable
-    public void deleteItem (Integer id) {
-        Session session = sessionFactory.openSession();
-        session.beginTransaction();
-        Car carToDelete =  session.get(Car.class, id);
-        session.delete(carToDelete);
-        session.getTransaction().commit();
-    }
-
-    public Long getCarAmount() {
-        Session session = sessionFactory.openSession();
-        session.beginTransaction();
-        Query query = session.createQuery("select count(c) from Car c");
-        Long number =  (Long) query.getSingleResult();
-        session.getTransaction().commit();
-        return  number;
-    }
 
     public List<Car> getCars () {
         return getModel().getItems();
